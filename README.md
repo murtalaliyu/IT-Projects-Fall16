@@ -1,2 +1,4 @@
 # Bittorrent-Client
-Rutg
+Authors:
+- Murtala Aliyu
+- Andrew Marshall
