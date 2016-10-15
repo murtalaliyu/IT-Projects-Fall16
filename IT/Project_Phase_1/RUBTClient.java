@@ -18,7 +18,7 @@ public class RUBTClient{
 		}
 
 		//get torrent file path and print it
-		Path filePath = Paths.get("C:/Users/Andrew/Documents/Code/Java/Internet_Technology/Phase_1/GivenTools/CS352_Exam_Solutions.mp4.torrent");
+		Path filePath = Paths.get("/Users/Murtala/Desktop/IT-Projects-Fall16/IT/Project_Phase_1/GivenTools/CS352_Exam_Solutions.mp4.torrent");
 		//System.out.println("\nTorrent file path is: " + filePath + "\n");
 
 		//open torrent path and parse it
@@ -30,8 +30,10 @@ public class RUBTClient{
 
 		//get tracker url
 		URL url = decodedTorrentByteFile.announce_url;
+		String urlString = url.toString();
+		urlString += "?";
 
-		//get infoHash in the form of ByteBuffer
+		//get infoHash in the form of ByteBuffer and convert to byte array
 		ByteBuffer infoHash = decodedTorrentByteFile.info_hash;
 		byte[] b = new byte[infoHash.remaining()];
 		infoHash.get(b);
@@ -44,26 +46,44 @@ public class RUBTClient{
 			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
 		}
 		String hex = new String(hexChars);
-		System.out.println(hex);
-		
-		/*System.out.println("\n" + infoHash.toString() + "\n");
-		String x = new String(infoHash.array(), "ASCII");
-		System.out.println(x + "\n");*/
 
-		/*String u = url.toString();
-		u = u.concat("?");
+		//add percent to hex value
+		String percent = "%", hexString = "";
+		hexString += percent;
+		int a = 0, i = 0;
+		while (i < 19) {
+			hexString += hex.substring(a, a+2);
+			hexString += percent;
+			a += 2;
+			i++;
+		}
+		hexString += hex.substring(38,40);
 
-		System.out.println("\nTracker URL: " + u + "\n");*/
+		//generate peer id
+		String peerId = "%25%85%04%26%23%e3%32%0d%f2%90%e2%51%f6%15%92%2f%d9%b0%ef%a9";
 
-		/*/send HTTP get request from tracker
+		//assemble final url
+		urlString += "info_hash=";
+		urlString += hexString;
+		urlString += "&peer_id=";
+		urlString += peerId;
+		urlString += "&port=6881&uploaded=0&downloaded=0&left=";
+		int left = decodedTorrentByteFile.file_length;
+		urlString += left;
+		urlString += "&event=started";
+
+		//convert url string to url
+		URL finalUrl = new URL(urlString);
+
+		//send HTTP get request to tracker
 		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
+			BufferedReader br = new BufferedReader(new InputStreamReader(finalUrl.openStream()));
 			String tempString = "";
 			while ((tempString = br.readLine()) != null) {
 				System.out.println(tempString);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
-		}*/
+		}
 	}
 }
