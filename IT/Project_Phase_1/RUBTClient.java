@@ -1,3 +1,9 @@
+/*
+Authors
+Murtala Aliyu
+Anrew Marshall
+*/
+
 import java.net.Socket;
 import java.net.ServerSocket;
 import java.io.*;
