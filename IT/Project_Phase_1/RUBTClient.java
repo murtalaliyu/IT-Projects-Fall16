@@ -4,7 +4,7 @@ import java.io.*;
 import java.nio.file.*;
 import GivenTools.TorrentInfo;
 import java.net.*;
-import java.util.Map;
+import java.util.*;
 import java.nio.ByteBuffer;
 import java.lang.*;
 
@@ -18,7 +18,7 @@ public class RUBTClient{
 		}
 
 		//get torrent file path and print it
-		Path filePath = Paths.get("/Users/Murtala/Desktop/IT/Project_Phase_1/GivenTools/CS352_Exam_Solutions.mp4.torrent");
+		Path filePath = Paths.get("C:/Users/Andrew/Documents/Code/Java/Internet_Technology/Phase_1/GivenTools/CS352_Exam_Solutions.mp4.torrent");
 		//System.out.println("\nTorrent file path is: " + filePath + "\n");
 
 		//open torrent path and parse it
@@ -33,7 +33,19 @@ public class RUBTClient{
 
 		//get infoHash in the form of ByteBuffer
 		ByteBuffer infoHash = decodedTorrentByteFile.info_hash;
-		String x = infoHash.toHexString();
+		byte[] b = new byte[infoHash.remaining()];
+		infoHash.get(b);
+		
+		final char[] hexArray = "0123456789ABCDEF".toCharArray();
+		char[] hexChars = new char[b.length * 2];
+		for ( int j = 0; j < b.length; j++ ) {
+			int v = b[j] & 0xFF;
+			hexChars[j * 2] = hexArray[v >>> 4];
+			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+		}
+		String hex = new String(hexChars);
+		System.out.println(hex);
+		
 		/*System.out.println("\n" + infoHash.toString() + "\n");
 		String x = new String(infoHash.array(), "ASCII");
 		System.out.println(x + "\n");*/
