@@ -74,25 +74,27 @@ public class RUBTClient{
 		urlString += "&peer_id=";
 		urlString += peerId;
 		urlString += "&port=6881&uploaded=0&downloaded=0&left=";
-		int left = decodedTorrentByteFile.file_length;
-		urlString += left;
+		urlString += decodedTorrentByteFile.file_length;
 		urlString += "&event=started";
 
 		//convert url string to url
 		URL finalUrl = new URL(urlString);
 
 		//send HTTP get request to tracker
+		Map<String,Object> map = new HashMap<String, Object>();
 		String trackerResponse = "";
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(finalUrl.openStream()));
 			while ((trackerResponse = br.readLine()) != null) {
 				System.out.println("\n" + trackerResponse + "\n");
-				//trackerResponse.printMap(trackerResponse, 1);
+				//save tracker response to map object
+				map.put(trackerResponse, 2);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		System.out.println(trackerResponse);
-		
+		System.out.println(map + "\n");
+
+		//printMap(map, 1);
 	}
 }
