@@ -65,7 +65,7 @@ public class RUBTClient{
 		}
 		hexString += hex.substring(38,40);
 
-		//generate peer id
+		//generate random peer id
 		String peerId = "%25%85%04%26%23%e3%32%0d%f2%90%e2%51%f6%15%92%2f%d9%b0%ef%a9";
 
 		//assemble final url
@@ -82,14 +82,17 @@ public class RUBTClient{
 		URL finalUrl = new URL(urlString);
 
 		//send HTTP get request to tracker
+		String trackerResponse = "";
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(finalUrl.openStream()));
-			String tempString = "";
-			while ((tempString = br.readLine()) != null) {
-				System.out.println(tempString);
+			while ((trackerResponse = br.readLine()) != null) {
+				System.out.println("\n" + trackerResponse + "\n");
+				//trackerResponse.printMap(trackerResponse, 1);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		System.out.println(trackerResponse);
+		
 	}
 }
