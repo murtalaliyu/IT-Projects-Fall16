@@ -9,6 +9,8 @@ import java.net.ServerSocket;
 import java.io.*;
 import java.nio.file.*;
 import GivenTools.TorrentInfo;
+import GivenTools.Bencoder2;
+import GivenTools.ToolKit;
 import java.net.*;
 import java.util.*;
 import java.nio.ByteBuffer;
@@ -24,13 +26,13 @@ public class RUBTClient{
 		}
 
 		//get torrent file path and print it
-		Path filePath = Paths.get("C:/Users/Andrew/Documents/Code/Java/Internet_Technology/Phase_1/GivenTools/CS352_Exam_Solutions.mp4.torrent");
+		Path filePath = Paths.get("/Users/Murtala/Desktop/IT-Projects-Fall16/IT/Project_Phase_1/GivenTools/CS352_Exam_Solutions.mp4.torrent");
 		//System.out.println("\nTorrent file path is: " + filePath + "\n");
 
 		//open torrent path and parse it
 		byte[] byteFilePathArray = Files.readAllBytes(filePath);
 
-		//decode data using Bencoder2.java
+		//decode data using TorretInfo.java
 		TorrentInfo decodedTorrentByteFile = new TorrentInfo(byteFilePathArray);
 		//System.out.println("Decoded torrent byte file: " + decodedTorrentByteFile + "\n");
 
@@ -74,30 +76,27 @@ public class RUBTClient{
 		urlString += "&peer_id=";
 		urlString += peerId;
 		urlString += "&port=6881&uploaded=0&downloaded=0&left=";
-		int left = decodedTorrentByteFile.file_length;
-		urlString += left;
+		urlString += decodedTorrentByteFile.file_length;
 		urlString += "&event=started";
 
-		//convert url string to url
-		URL finalUrl = new URL(urlString);
-
 		//send HTTP get request to tracker
-		Map<String,Object> map = new HashMap<String, Object>();
-		String trackerResponse = "";
-		try {
-				BufferedReader br = new BufferedReader(new InputStreamReader(finalUrl.openStream()));
-				trackerResponse = br.readLine();
-				//System.out.println("\n" + trackerResponse + "\n");
-				//save tracker response to map object
-				map.put(trackerResponse, 2);
-			}
-		catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		
-		System.out.println(trackerResponse);
-		//BufferedReader peer = new BufferedReader(new InputStreamReader(finalUrl.openStream()));
-		
+		HttpURLConnection connect = (HttpURLConnection) new URL(urlString).openConnection();
+		DataInputStream input = new DataInputStream(connect.getInputStream());
+
+		int size = connect.getContentLength();
+		byte[] encodedTrackerResponse = new byte[size];
+
+		input.readFully(encodedTrackerResponse);
+		input.close();
+
+		//get list of peers from tracker response
+		Object o = null;
+		o = Bencoder2.decode(encodedTrackerResponse);
+		//System.out.println(o);
+		Map<ByteBuffer, Object> response = (HashMap<ByteBuffer, Object>) o;
+
+		//print response
+		ToolKit.printMap(response, 1);
 	}
 	
 	public static String escapeStr(String str){
