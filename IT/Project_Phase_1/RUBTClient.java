@@ -77,9 +77,54 @@ public class RUBTClient{
  		//print response
  		ToolKit.printMap(response, 0);
 
-		//open socket connection to peers
+ 		//get list of peers
  		ArrayList<Peer> peers = getListOfPeers(encodedTrackerResponse);
- 		System.out.println(peers);
+ 		//System.out.println(peers);
+ 		
+ 		//get peer info from each peer
+ 		Peer tmp = null; 
+ 		for (int i = 0; i < peers.size(); i++) {
+ 			tmp = peers.get(i);
+
+ 			//open socket connection to each peer
+			try (ServerSocket serverSocket = new ServerSocket(tmp.port)) {
+
+				// a "blocking" call which waits until a connection is requested
+                Socket clientSocket = serverSocket.accept();
+
+                // open up IO streams
+                BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+	            DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
+	            //clientSentence = inFromClient.readLine();
+	            //System.out.println("Received Packet: " + clientSentence);
+
+		 		String handshake = "";
+		        byte pstrlen = 19;
+		        String pstr = "BitTorrent protocol";
+		        Byte[] reserved = new Byte[8];
+		 		for (int j = 0; j < 8; j++) {
+		 			reserved[j] = 0;
+		 		}
+
+		 		//concatenate handshake message
+		 		handshake += pstrlen + pstr + reserved + hexString + peerId;
+
+		 		//send handshake to peer
+		 		byte[] gb = handshake.getBytes();
+		 		String handshakeString = new String(gb);
+		 		//OutputStream os = ;
+		 		//o.write(gb);
+		 		//DataOutputStream outStream = new DataOutputStream( socket.getOutputStream );
+				//outStream.write(gb);
+
+
+                
+			} catch (IOException e) {
+				//return error when something goes wrong when server is listening on specified port
+            System.out.println("Client disconnected on port " + tmp.port);
+            System.out.println(e.getMessage());
+			}
+ 		}
 
 	}
 
