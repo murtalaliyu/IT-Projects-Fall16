@@ -151,6 +151,17 @@ public class RUBTClient{
 		
 		return esc;
 	}
+}
+
+class Peer{
+		
+	String name;
+	int portno;
+	String ip;
 	
-	//public static BufferedReader connectToPeer()
+	public Peer(String n, int p, String addr){
+		name = n;
+		portno = p;
+		ip = addr;
+	}
 }
