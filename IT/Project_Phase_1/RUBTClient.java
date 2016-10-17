@@ -8,9 +8,7 @@ import java.net.Socket;
 import java.net.ServerSocket;
 import java.io.*;
 import java.nio.file.*;
-import GivenTools.TorrentInfo;
-import GivenTools.Bencoder2;
-import GivenTools.ToolKit;
+import GivenTools.*;
 import java.net.*;
 import java.util.*;
 import java.nio.ByteBuffer;
@@ -89,14 +87,49 @@ public class RUBTClient{
 		input.readFully(encodedTrackerResponse);
 		input.close();
 
-		//get list of peers from tracker response
-		Object o = null;
-		o = Bencoder2.decode(encodedTrackerResponse);
-		//System.out.println(o);
-		Map<ByteBuffer, Object> response = (HashMap<ByteBuffer, Object>) o;
-
 		//print response
-		ToolKit.printMap(response, 1);
+		//ToolKit.printMap(response, 1);
+
+
+	}
+
+	//pertaining to peer list
+	public final static ByteBuffer PEER_KEY = ByteBuffer.wrap(new byte[] {'p', 'e', 'e', 'r', 's'});
+	public final static ByteBuffer PEER_ID = ByteBuffer.wrap(new byte[] {'p', 'e', 'e', 'r', ' ', 'i', 'd'});
+	public final static ByteBuffer PEER_IP = ByteBuffer.wrap(new byte[] {'i', 'p'});
+	public final static ByteBuffer PEER_PORT = ByteBuffer.wrap(new byte[] {'p', 'o', 'r', 't'});
+
+	//get list of peers from tracker response
+	public static ArrayList<Peer> getListOfPeers(byte[] encodedTrackerResponse) throws BencodingException {
+		Object o = Bencoder2.decode(encodedTrackerResponse);
+
+		HashMap<ByteBuffer, Object> response = (HashMap<ByteBuffer, Object>) o;
+
+		ArrayList peerResponse = (ArrayList) response.get(PEER_KEY);
+		ArrayList<Peer> peerList = new ArrayList<Peer>();
+
+		for (int i = 0; i < peerResponse.size(); i++) {
+			HashMap tmp = (HashMap) peerResponse.get(i);
+			String name = null, ip = null;
+
+			try {
+
+				name = byteBufferToString((ByteBuffer) tmp.get(PEER_ID));
+				ip = byteBufferToString((ByteBuffer) tmp.get(PEER_IP));
+
+			} catch (UnsupportedEncodingException e1) {
+				e1.printStackTrace();
+			}
+
+			int port = (int) tmp.get(PEER_PORT);
+
+			if (name.contains("RU")) {
+				Peer peer = new Peer(name, port, ip);
+				peerList.add(peer);
+			}
+		}
+
+		return peerList;
 	}
 	
 	public static String escapeStr(String str){
