@@ -99,6 +99,17 @@ public class RUBTClient{
 	public final static ByteBuffer PEER_IP = ByteBuffer.wrap(new byte[] {'i', 'p'});
 	public final static ByteBuffer PEER_PORT = ByteBuffer.wrap(new byte[] {'p', 'o', 'r', 't'});
 
+	//implement Peer object
+
+	//implement byteBufferToString 
+	public static String byteBufferToString(ByteBuffer byteBuffer) {
+	
+		byte[] newByte = new byte[byteBuffer.remaining()];
+		String string = new String(newByte);
+
+		return string;
+	}
+
 	//get list of peers from tracker response
 	public static ArrayList<Peer> getListOfPeers(byte[] encodedTrackerResponse) throws BencodingException {
 		Object o = Bencoder2.decode(encodedTrackerResponse);
