@@ -44,26 +44,57 @@ public class RUBTClient{
 		String hex = byteBufferToHexString(infoHash);
 
 		//escape string
-		String hexString = escapeStr(hex);
+		//add percent to hex value
+		String percent = "%", hexString = "";
+		hexString += percent;
+		int a = 0, i = 0;
+		while (i < 19) {
+			hexString += hex.substring(a, a+2);
+			hexString += percent;
+			a += 2;
+			i++;
+		}
+		hexString += hex.substring(38,40);
 
 		//generate peer id
 		String peerId = "%25%85%04%26%23%e3%32%0d%f2%90%e2%51%f6%15%92%2f%d9%b0%ef%a9";
 
 		//assemble final url
-		urlString += "info_hash=" + hexString + "&peer_id=" + peerId + "&port=6881&uploaded=0&downloaded=0&left=" + decodedTorrentByteFile.file_length + "&event=started";
+		urlString += "info_hash=";
+		urlString += hexString;
+		urlString += "&peer_id=";
+		urlString += peerId;
+		urlString += "&port=6882&uploaded=0&downloaded=0&left=";
+		int left = decodedTorrentByteFile.file_length;
+		urlString += left;
+		urlString += "&event=started";
+
+		//convert url string to url
+		URL finalUrl = new URL(urlString);
 
 		//send HTTP get request to tracker
-		HttpURLConnection connect = (HttpURLConnection) new URL(urlString).openConnection();
-		DataInputStream input = new DataInputStream(connect.getInputStream());
+  		HttpURLConnection connect = (HttpURLConnection) new URL(urlString).openConnection();
+ 		DataInputStream input = new DataInputStream(connect.getInputStream());
+ 
+ 		int size = connect.getContentLength();
+ 		byte[] encodedTrackerResponse = new byte[size];
+ 
+  		input.readFully(encodedTrackerResponse);
+  		input.close();
 
-		int size = connect.getContentLength();
-		byte[] encodedTrackerResponse = new byte[size];
-
-		input.readFully(encodedTrackerResponse);
-		input.close();
+		//get list of peers from tracker response
+ 		Object o = null;
+ 		o = Bencoder2.decode(encodedTrackerResponse);
+ 		System.out.println(o);
+ 		Map<ByteBuffer, Object> response = (HashMap<ByteBuffer, Object>) o;
+ 
+ 		//print response
+ 		ToolKit.printMap(response, 0);
 
 		//open socket connection to peers
-
+ 		ArrayList<Peer> peer = new ArrayList<Peer>();
+ 		peer = getListOfPeers(encodedTrackerResponse);
+ 		System.out.println(peer);
 
 	}
 
@@ -142,13 +173,18 @@ public class RUBTClient{
 //peer class
 class Peer{
 		
-	String name;
-	int portno;
-	String ip;
-	
-	public Peer(String n, int p, String addr){
-		name = n;
-		portno = p;
-		ip = addr;
+	public String name;
+	public int port;
+	public String ip;
+
+	public Peer(String name, int port, String ip) {
+		this.name = name;
+		this.port = port;
+		this.ip = ip;
+	}
+
+	public String toString() {
+		String returnStr = "Peer: " + name + "Port: " + port + "IP: " + ip;
+		return returnStr;
 	}
 }
