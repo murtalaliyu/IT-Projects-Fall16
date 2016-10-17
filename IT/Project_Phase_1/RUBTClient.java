@@ -24,7 +24,7 @@ public class RUBTClient{
 		}
 
 		//get torrent file path and print it
-		Path filePath = Paths.get("/Users/Murtala/Desktop/IT-Projects-Fall16/IT/Project_Phase_1/GivenTools/CS352_Exam_Solutions.mp4.torrent");
+		Path filePath = Paths.get("C:/Users/Andrew/Documents/Code/Java/Internet_Technology/Phase_1/GivenTools/CS352_Exam_Solutions.mp4.torrent");
 		//System.out.println("\nTorrent file path is: " + filePath + "\n");
 
 		//open torrent path and parse it
@@ -82,14 +82,36 @@ public class RUBTClient{
 		URL finalUrl = new URL(urlString);
 
 		//send HTTP get request to tracker
+		Map<String,Object> map = new HashMap<String, Object>();
+		String trackerResponse = "";
 		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(finalUrl.openStream()));
-			String tempString = "";
-			while ((tempString = br.readLine()) != null) {
-				System.out.println(tempString);
+				BufferedReader br = new BufferedReader(new InputStreamReader(finalUrl.openStream()));
+				trackerResponse = br.readLine();
+				//System.out.println("\n" + trackerResponse + "\n");
+				//save tracker response to map object
+				map.put(trackerResponse, 2);
 			}
-		} catch (Exception ex) {
+		catch (Exception ex) {
 			ex.printStackTrace();
 		}
+		
+		System.out.println(trackerResponse);
+		//BufferedReader peer = new BufferedReader(new InputStreamReader(finalUrl.openStream()));
+		
 	}
+	
+	public static String escapeStr(String str){
+		String esc = "";
+		
+		int len = str.length();
+		for(int i=2; i < len; i+=2 ){
+			esc += "%";
+			esc += str.substring(i-2, i);
+		}
+		esc += "%";
+		
+		return esc;
+	}
+	
+	//public static BufferedReader connectToPeer()
 }
