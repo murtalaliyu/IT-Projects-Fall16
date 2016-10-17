@@ -41,29 +41,10 @@ public class RUBTClient{
 
 		//get infoHash in the form of ByteBuffer and convert to byte array
 		ByteBuffer infoHash = decodedTorrentByteFile.info_hash;
-		byte[] b = new byte[infoHash.remaining()];
-		infoHash.get(b);
-		
-		final char[] hexArray = "0123456789ABCDEF".toCharArray();
-		char[] hexChars = new char[b.length * 2];
-		for ( int j = 0; j < b.length; j++ ) {
-			int v = b[j] & 0xFF;
-			hexChars[j * 2] = hexArray[v >>> 4];
-			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
-		}
-		String hex = new String(hexChars);
+		String hex = byteBufferToHexString(infoHash);
 
 		//add percent to hex value
-		String percent = "%", hexString = "";
-		hexString += percent;
-		int a = 0, i = 0;
-		while (i < 19) {
-			hexString += hex.substring(a, a+2);
-			hexString += percent;
-			a += 2;
-			i++;
-		}
-		hexString += hex.substring(38,40);
+		String hexString = escapeStr(hex);
 
 		//generate peer id
 		String peerId = "%25%85%04%26%23%e3%32%0d%f2%90%e2%51%f6%15%92%2f%d9%b0%ef%a9";
@@ -88,18 +69,25 @@ public class RUBTClient{
 		input.close();
 
 		//print response
-		//ToolKit.printMap(response, 1);
-
+		System.out.println(encodedTrackerResponse);
 
 	}
 
-	//pertaining to peer list
-	public final static ByteBuffer PEER_KEY = ByteBuffer.wrap(new byte[] {'p', 'e', 'e', 'r', 's'});
-	public final static ByteBuffer PEER_ID = ByteBuffer.wrap(new byte[] {'p', 'e', 'e', 'r', ' ', 'i', 'd'});
-	public final static ByteBuffer PEER_IP = ByteBuffer.wrap(new byte[] {'i', 'p'});
-	public final static ByteBuffer PEER_PORT = ByteBuffer.wrap(new byte[] {'p', 'o', 'r', 't'});
-
-	//implement Peer object
+	//implement byteBuffer to hex string
+	public static String byteBufferToHexString(ByteBuffer byteBuffer) {
+		byte[] b = new byte[byteBuffer.remaining()];
+		byteBuffer.get(b);
+		
+		final char[] hexArray = "0123456789ABCDEF".toCharArray();
+		char[] hexChars = new char[b.length * 2];
+		for ( int j = 0; j < b.length; j++ ) {
+			int v = b[j] & 0xFF;
+			hexChars[j * 2] = hexArray[v >>> 4];
+			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+		}
+		String hex = new String(hexChars);
+		return hex;
+	}
 
 	//implement byteBufferToString 
 	public static String byteBufferToString(ByteBuffer byteBuffer) {
@@ -109,6 +97,14 @@ public class RUBTClient{
 
 		return string;
 	}
+
+	//implement Peer object
+
+	//pertaining to peer list
+	public final static ByteBuffer PEER_KEY = ByteBuffer.wrap(new byte[] {'p', 'e', 'e', 'r', 's'});
+	public final static ByteBuffer PEER_ID = ByteBuffer.wrap(new byte[] {'p', 'e', 'e', 'r', ' ', 'i', 'd'});
+	public final static ByteBuffer PEER_IP = ByteBuffer.wrap(new byte[] {'i', 'p'});
+	public final static ByteBuffer PEER_PORT = ByteBuffer.wrap(new byte[] {'p', 'o', 'r', 't'});
 
 	//get list of peers from tracker response
 	public static ArrayList<Peer> getListOfPeers(byte[] encodedTrackerResponse) throws BencodingException {
@@ -143,6 +139,7 @@ public class RUBTClient{
 		return peerList;
 	}
 	
+	//escape given string
 	public static String escapeStr(String str){
 		String esc = "";
 		
@@ -151,7 +148,6 @@ public class RUBTClient{
 			esc += "%";
 			esc += str.substring(i-2, i);
 		}
-		esc += "%";
 		
 		return esc;
 	}
