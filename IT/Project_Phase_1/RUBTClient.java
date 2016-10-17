@@ -137,10 +137,10 @@ public class RUBTClient{
 
 			int port = (int) tmp.get(PEER_PORT);
 
-			//if (name.contains("RU")) {
+			if (name.contains("RU")) {
 				Peer peer = new Peer(name, port, ip);
 				peerList.add(peer);
-			//}
+			}
 		}
 
 		return peerList;
