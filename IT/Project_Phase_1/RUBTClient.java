@@ -44,19 +44,9 @@ public class RUBTClient{
 		String hex = byteBufferToHexString(infoHash);
 
 		//escape string
-		//add percent to hex value
-		String percent = "%", hexString = "";
-		hexString += percent;
-		int a = 0, i = 0;
-		while (i < 19) {
-			hexString += hex.substring(a, a+2);
-			hexString += percent;
-			a += 2;
-			i++;
-		}
-		hexString += hex.substring(38,40);
+		String hexString = escapeStr(hex);
 
-		//generate peer id
+		//**************generate random peer id*********************
 		String peerId = "%25%85%04%26%23%e3%32%0d%f2%90%e2%51%f6%15%92%2f%d9%b0%ef%a9";
 
 		//assemble final url
@@ -65,12 +55,8 @@ public class RUBTClient{
 		urlString += "&peer_id=";
 		urlString += peerId;
 		urlString += "&port=6882&uploaded=0&downloaded=0&left=";
-		int left = decodedTorrentByteFile.file_length;
-		urlString += left;
+		urlString += decodedTorrentByteFile.file_length;
 		urlString += "&event=started";
-
-		//convert url string to url
-		URL finalUrl = new URL(urlString);
 
 		//send HTTP get request to tracker
   		HttpURLConnection connect = (HttpURLConnection) new URL(urlString).openConnection();
@@ -85,16 +71,15 @@ public class RUBTClient{
 		//get list of peers from tracker response
  		Object o = null;
  		o = Bencoder2.decode(encodedTrackerResponse);
- 		System.out.println(o);
+ 		//System.out.println(o);
  		Map<ByteBuffer, Object> response = (HashMap<ByteBuffer, Object>) o;
  
  		//print response
  		ToolKit.printMap(response, 0);
 
 		//open socket connection to peers
- 		ArrayList<Peer> peer = new ArrayList<Peer>();
- 		peer = getListOfPeers(encodedTrackerResponse);
- 		System.out.println(peer);
+ 		ArrayList<Peer> peers = getListOfPeers(encodedTrackerResponse);
+ 		System.out.println(peers);
 
 	}
 
@@ -115,12 +100,17 @@ public class RUBTClient{
 	}
 
 	//implement byteBufferToString 
-	public static String byteBufferToString(ByteBuffer byteBuffer) {
+	public static String byteBufferToString(ByteBuffer myByteBuffer) {
 	
-		byte[] newByte = new byte[byteBuffer.remaining()];
-		String string = new String(newByte);
-
-		return string;
+		if (myByteBuffer.hasArray()) {
+	    	return new String(myByteBuffer.array(),
+	        myByteBuffer.arrayOffset() + myByteBuffer.position(),
+	        myByteBuffer.remaining());
+		} else {
+		    final byte[] b = new byte[myByteBuffer.remaining()];
+		    myByteBuffer.duplicate().get(b);
+		    return new String(b);
+		}
 	}
 
 	//pertaining to peer list
@@ -147,26 +137,29 @@ public class RUBTClient{
 
 			int port = (int) tmp.get(PEER_PORT);
 
-			if (name.contains("RU")) {
+			//if (name.contains("RU")) {
 				Peer peer = new Peer(name, port, ip);
 				peerList.add(peer);
-			}
+			//}
 		}
 
 		return peerList;
 	}
 	
 	//escape given string
-	public static String escapeStr(String str){
-		String esc = "";
-		
-		int len = str.length();
-		for(int i=2; i < len; i+=2 ){
-			esc += "%";
-			esc += str.substring(i-2, i);
+	public static String escapeStr(String hex){
+		String percent = "%", hexString = "";
+		hexString += percent;
+		int a = 0, i = 0;
+		while (i < 19) {
+			hexString += hex.substring(a, a+2);
+			hexString += percent;
+			a += 2;
+			i++;
 		}
-		
-		return esc;
+		hexString += hex.substring(38,40);
+
+		return hexString;
 	}
 }
 
