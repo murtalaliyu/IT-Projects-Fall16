@@ -39,24 +39,18 @@ public class RUBTClient{
 		String urlString = url.toString();
 		urlString += "?";
 
-		//get infoHash in the form of ByteBuffer and convert to byte array
+		//get infoHash in the form of ByteBuffer and convert to hex string
 		ByteBuffer infoHash = decodedTorrentByteFile.info_hash;
 		String hex = byteBufferToHexString(infoHash);
 
-		//add percent to hex value
+		//escape string
 		String hexString = escapeStr(hex);
 
 		//generate peer id
 		String peerId = "%25%85%04%26%23%e3%32%0d%f2%90%e2%51%f6%15%92%2f%d9%b0%ef%a9";
 
 		//assemble final url
-		urlString += "info_hash=";
-		urlString += hexString;
-		urlString += "&peer_id=";
-		urlString += peerId;
-		urlString += "&port=6881&uploaded=0&downloaded=0&left=";
-		urlString += decodedTorrentByteFile.file_length;
-		urlString += "&event=started";
+		urlString += "info_hash=" + hexString + "&peer_id=" + peerId + "&port=6881&uploaded=0&downloaded=0&left=" + decodedTorrentByteFile.file_length + "&event=started";
 
 		//send HTTP get request to tracker
 		HttpURLConnection connect = (HttpURLConnection) new URL(urlString).openConnection();
@@ -68,8 +62,8 @@ public class RUBTClient{
 		input.readFully(encodedTrackerResponse);
 		input.close();
 
-		//print response
-		System.out.println(encodedTrackerResponse);
+		//open socket connection to peers
+
 
 	}
 
@@ -98,8 +92,6 @@ public class RUBTClient{
 		return string;
 	}
 
-	//implement Peer object
-
 	//pertaining to peer list
 	public final static ByteBuffer PEER_KEY = ByteBuffer.wrap(new byte[] {'p', 'e', 'e', 'r', 's'});
 	public final static ByteBuffer PEER_ID = ByteBuffer.wrap(new byte[] {'p', 'e', 'e', 'r', ' ', 'i', 'd'});
@@ -119,14 +111,8 @@ public class RUBTClient{
 			HashMap tmp = (HashMap) peerResponse.get(i);
 			String name = null, ip = null;
 
-			try {
-
-				name = byteBufferToString((ByteBuffer) tmp.get(PEER_ID));
-				ip = byteBufferToString((ByteBuffer) tmp.get(PEER_IP));
-
-			} catch (UnsupportedEncodingException e1) {
-				e1.printStackTrace();
-			}
+			name = byteBufferToString((ByteBuffer) tmp.get(PEER_ID));
+			ip = byteBufferToString((ByteBuffer) tmp.get(PEER_IP));
 
 			int port = (int) tmp.get(PEER_PORT);
 
@@ -153,6 +139,7 @@ public class RUBTClient{
 	}
 }
 
+//peer class
 class Peer{
 		
 	String name;
