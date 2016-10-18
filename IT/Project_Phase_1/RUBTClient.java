@@ -78,8 +78,6 @@ public class RUBTClient{
 
  		//get list of peers
  		ArrayList<Peer> peers = getListOfPeers(encodedTrackerResponse);
-
- 		//System.out.println(peers);
  		
  		//get peer info from each peer
  		Peer tmp = null; 
@@ -89,34 +87,37 @@ public class RUBTClient{
  			//open socket connection to each peer
 			try (Socket socket = new Socket(tmp.ip, tmp.port))
 			 {
+			 	while (true) {
+	                // open up IO streams
+	                DataInputStream in = new DataInputStream(socket.getInputStream());
+	                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-                // open up IO streams
-                DataInputStream in = new DataInputStream(socket.getInputStream());
-                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+					//create handshake message
+			        byte pstrlen = 19;
+			        String pstr = "BitTorrent protocol";
+			        byte[] reserved = {0, 0, 0, 0, 0, 0, 0, 0};
 
-				//create handshake message
-		        byte pstrlen = 19;
-		        String pstr = "BitTorrent protocol";
-		        byte[] reserved = {0, 0, 0, 0, 0, 0, 0, 0};
+			        //send handshake
+					out.writeByte(pstrlen);
+					out.writeBytes(pstr);
+					out.write(reserved);
+					out.write(infoHash.array());
+					out.write(peerId);
 
-		        //send handshake
-				out.writeByte(pstrlen);
-				out.writeBytes(pstr);
-				out.write(reserved);
-				out.write(infoHash.array());
-				out.write(peerId);
+					//get peer handshake response
+					byte[] b = new byte[100];
+					in.readFully(b);
+					System.out.println(b);
 
-				//get peer handshake response
-				byte[] b = new byte[100];
-				in.readFully(b);
-				System.out.println(b);
+					//print handshake response
+					String strg = new String(b);
+					System.out.println(strg);
 
-				//print handshake response
-				String strg = new String(b);
-				System.out.println(strg);
-
-				
-				
+					String cs = "";
+					while ((cs = in.readLine()) != null) {
+						System.out.println(cs);
+					}
+				}
                 
 			} catch (IOException e) {
 
