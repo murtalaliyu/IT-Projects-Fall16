@@ -13,6 +13,7 @@ import java.net.*;
 import java.util.*;
 import java.nio.ByteBuffer;
 import java.lang.*;
+import java.net.InetAddress;
 
 public class RUBTClient{
 	public static void main(String[] args) throws Exception {
@@ -41,32 +42,30 @@ public class RUBTClient{
 
 		//get infoHash in the form of ByteBuffer and convert to hex string
 		ByteBuffer infoHash = decodedTorrentByteFile.info_hash;
-		String hex = byteBufferToHexString(infoHash);
+		String infoHashString = toHex(infoHash.array());
 
-		//escape string
-		String hexString = escapeStr(hex);
-
-		//**************generate random peer id*********************
-		String peerId = "%25%85%04%26%23%e3%32%0d%f2%90%e2%51%f6%15%92%2f%d9%b0%ef%a9";
+		//generate random peer id of size 20
+		byte[] peerId = getRandomByteArray(20);
+		String peerIdString = new String(peerId);
 
 		//assemble final url
 		urlString += "info_hash=";
-		urlString += hexString;
+		urlString += infoHashString;
 		urlString += "&peer_id=";
-		urlString += peerId;
+		urlString += peerIdString;
 		urlString += "&port=6882&uploaded=0&downloaded=0&left=";
 		urlString += decodedTorrentByteFile.file_length;
 		urlString += "&event=started";
 
 		//send HTTP get request to tracker
   		HttpURLConnection connect = (HttpURLConnection) new URL(urlString).openConnection();
- 		DataInputStream input = new DataInputStream(connect.getInputStream());
+ 		DataInputStream input1 = new DataInputStream(connect.getInputStream());
  
  		int size = connect.getContentLength();
  		byte[] encodedTrackerResponse = new byte[size];
  
-  		input.readFully(encodedTrackerResponse);
-  		input.close();
+  		input1.readFully(encodedTrackerResponse);
+  		input1.close();
 
 		//get list of peers from tracker response
  		Object o = null;
@@ -79,6 +78,7 @@ public class RUBTClient{
 
  		//get list of peers
  		ArrayList<Peer> peers = getListOfPeers(encodedTrackerResponse);
+
  		//System.out.println(peers);
  		
  		//get peer info from each peer
@@ -87,40 +87,40 @@ public class RUBTClient{
  			tmp = peers.get(i);
 
  			//open socket connection to each peer
-			try (ServerSocket serverSocket = new ServerSocket(tmp.port)) {
-
-				// a "blocking" call which waits until a connection is requested
-                Socket clientSocket = serverSocket.accept();
+			try (Socket socket = new Socket(tmp.ip, tmp.port))
+			 {
 
                 // open up IO streams
-                BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-	            DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
-	            //clientSentence = inFromClient.readLine();
-	            //System.out.println("Received Packet: " + clientSentence);
+                DataInputStream in = new DataInputStream(socket.getInputStream());
+                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-		 		String handshake = "";
+				//create handshake message
 		        byte pstrlen = 19;
 		        String pstr = "BitTorrent protocol";
-		        Byte[] reserved = new Byte[8];
-		 		for (int j = 0; j < 8; j++) {
-		 			reserved[j] = 0;
-		 		}
+		        byte[] reserved = {0, 0, 0, 0, 0, 0, 0, 0};
 
-		 		//concatenate handshake message
-		 		handshake += pstrlen + pstr + reserved + hexString + peerId;
+		        //send handshake
+				out.writeByte(pstrlen);
+				out.writeBytes(pstr);
+				out.write(reserved);
+				out.write(infoHash.array());
+				out.write(peerId);
 
-		 		//send handshake to peer
-		 		byte[] gb = handshake.getBytes();
-		 		String handshakeString = new String(gb);
-		 		//OutputStream os = ;
-		 		//o.write(gb);
-		 		//DataOutputStream outStream = new DataOutputStream( socket.getOutputStream );
-				//outStream.write(gb);
+				//get peer handshake response
+				byte[] b = new byte[100];
+				in.readFully(b);
+				System.out.println(b);
 
+				//print handshake response
+				String strg = new String(b);
+				System.out.println(strg);
 
+				
+				
                 
 			} catch (IOException e) {
-				//return error when something goes wrong when server is listening on specified port
+
+			//return error when something goes wrong when server is listening on specified port
             System.out.println("Client disconnected on port " + tmp.port);
             System.out.println(e.getMessage());
 			}
@@ -129,19 +129,13 @@ public class RUBTClient{
 	}
 
 	//implement byteBuffer to hex string
-	public static String byteBufferToHexString(ByteBuffer byteBuffer) {
-		byte[] b = new byte[byteBuffer.remaining()];
-		byteBuffer.get(b);
-		
-		final char[] hexArray = "0123456789ABCDEF".toCharArray();
-		char[] hexChars = new char[b.length * 2];
-		for ( int j = 0; j < b.length; j++ ) {
-			int v = b[j] & 0xFF;
-			hexChars[j * 2] = hexArray[v >>> 4];
-			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+	private static String toHex(byte[] info_hash) {
+		String hash_hex = "";
+
+		for (int i = 0; i < info_hash.length; i++) {
+			hash_hex += "%" + String.format("%02X",info_hash[i]);
 		}
-		String hex = new String(hexChars);
-		return hex;
+		return hash_hex;
 	}
 
 	//implement byteBufferToString 
@@ -205,6 +199,16 @@ public class RUBTClient{
 		hexString += hex.substring(38,40);
 
 		return hexString;
+	}
+
+	//generate random bytes
+	public static byte[] getRandomByteArray(int size){
+
+		byte[] result = new byte[size];
+		Random random = new Random();
+		random.nextBytes(result);
+
+		return result;
 	}
 }
 
