@@ -15,7 +15,28 @@ import java.nio.ByteBuffer;
 import java.lang.*;
 import java.net.InetAddress;
 
-public class RUBTClient{
+public class RUBTClient {
+
+	public static final byte MESSAGE_TYPE_KEEP_ALIVE = -1;
+	public static final byte MESSAGE_TYPE_CHOKE = 0;
+	public static final byte MESSAGE_TYPE_UNCHOKE = 1;
+	public static final byte MESSAGE_TYPE_INTERESTED = 2;
+	public static final byte MESSAGE_TYPE_NOT_INTERESTED = 3;
+	public static final byte MESSAGE_TYPE_HAVE = 4;
+	public static final byte MESSAGE_TYPE_BITFIELD = 5;
+	public static final byte MESSAGE_TYPE_REQUEST = 6;
+	public static final byte MESSAGE_TYPE_PIECE = 7;
+	public static final byte MESSAGE_TYPE_CANCEL = 8;
+	public static final byte MESSAGE_TYPE_HANDSHAKE = 9;
+	public static final byte[] BIT_TORRENT_PROTOCOL = new String("BitTorrent protocol").getBytes();
+
+	public static boolean isChoked = false;
+
+	public static int left = 0;
+	public static int numofPieces = 0;
+	public static int downloaded = 0;
+	public static int uploaded = 0;
+
 	public static void main(String[] args) throws Exception {
 
 		//return error message if torrent file and file name arguments aren't entered
@@ -74,6 +95,7 @@ public class RUBTClient{
  		Map<ByteBuffer, Object> response = (HashMap<ByteBuffer, Object>) o;
  
  		//print response
+ 		System.out.println();
  		ToolKit.printMap(response, 0);
 
  		//get list of peers
@@ -116,7 +138,46 @@ public class RUBTClient{
 				socket.close();
 			} else {
 
-				System.out.println("Handshake with " + tmp.name + " accepted");
+				System.out.println("Handshake with " + tmp.name + " accepted\n");
+
+				//send a message
+				long startTime = System.nanoTime();
+				byte[] keepAlive = {0, 0, 0, 0};
+				out.write(keepAlive); 
+				 
+				long estimatedTime = System.nanoTime() - startTime;
+				System.out.println("Time elapsed: " + estimatedTime + " nanoseconds (" + ((float)estimatedTime/1000000000) + " seconds)\n");
+
+				byte [] interestedMessage = new byte[5];
+				System.arraycopy(intToByteArray(1), 0, interestedMessage, 0, 4);
+				interestedMessage[4] = (byte) 2;
+
+				out.write(interestedMessage);
+				int messageID = getMessageIDFromPeer(in);
+				
+				byte[] messageBytes = new byte[10]; int u = 0;
+				/*while (in.readByte()) {
+					messageBytes[u] = in.readLine();
+					System.out.println(messageBytes[u]);
+					u++;
+				}*/
+				
+				if (messageID == (int) MESSAGE_TYPE_BITFIELD) {
+					System.out.println("Got a bitfield, message ID is: " + messageID);
+
+					//get bitfields
+
+				}
+
+				out.write(interestedMessage);
+				messageID = getMessageIDFromPeer(in);
+				
+				if (messageID == 1) {
+					System.out.println("We are unchoked, message ID is: " + messageID);
+
+					//request piece
+				}
+
 			}
 
 		} catch (IOException e) {
@@ -208,6 +269,117 @@ public class RUBTClient{
 		random.nextBytes(result);
 
 		return result;
+	}
+
+	//int to byte array
+	public static byte[] intToByteArray(int value) {
+		byte[] retVal = ByteBuffer.allocate(4).putInt(value).array();
+		return retVal;
+	}
+
+	//get message ID from peer
+	public static int getMessageIDFromPeer(DataInputStream in) throws Exception {
+		byte messageID = readMessage(in);
+
+		while (true) {
+			switch (messageID) {
+
+			case MESSAGE_TYPE_KEEP_ALIVE:
+				break;
+
+			case MESSAGE_TYPE_CHOKE:
+				return (int) MESSAGE_TYPE_CHOKE;
+				
+			case MESSAGE_TYPE_UNCHOKE:
+				return (int) MESSAGE_TYPE_UNCHOKE;
+				
+			case MESSAGE_TYPE_INTERESTED:
+				return (int) MESSAGE_TYPE_INTERESTED;
+				
+			case MESSAGE_TYPE_NOT_INTERESTED:
+				return (int) MESSAGE_TYPE_NOT_INTERESTED;
+				
+			case MESSAGE_TYPE_HAVE:
+				return (int) MESSAGE_TYPE_HAVE;
+				
+			case MESSAGE_TYPE_BITFIELD:
+				return (int) MESSAGE_TYPE_BITFIELD;
+				
+			case MESSAGE_TYPE_REQUEST:
+				return (int) MESSAGE_TYPE_REQUEST;
+				
+			case MESSAGE_TYPE_PIECE:
+				return (int) MESSAGE_TYPE_PIECE;
+				
+			case MESSAGE_TYPE_CANCEL:
+				return (int) MESSAGE_TYPE_CANCEL;
+				
+			case MESSAGE_TYPE_HANDSHAKE:
+				return (int) MESSAGE_TYPE_HANDSHAKE;
+			}
+			
+			messageID = readMessage(in);
+		}
+
+	}
+
+	//read peer message
+	public static byte readMessage(DataInputStream in) throws Exception {
+		int length = in.readInt();
+
+		if (length == 0) {
+			return -1;
+		}
+
+		byte id = in.readByte();
+
+		switch (id) {
+
+		// choke
+		case 0:
+			return id;
+
+		// unchoke
+		case 1:
+			return id;
+
+		// interested
+		case 2:
+			return id;
+
+		// not interested
+		case 3:
+			return id;
+
+		// have
+		case 4:
+			in.readInt();
+			return id;
+
+		case 5:
+			for (int i = 0; i < length - 1; i++) {
+				in.readByte();
+			}
+			return id;
+
+		// request
+		case 6:
+			return id;
+
+		// piece
+		case 7:
+			int index = in.readInt();
+			int begin = in.readInt();
+
+		// cancel
+		case 8:
+			return id;
+
+		default:
+			break;
+		}
+
+		return 0;
 	}
 }
 
