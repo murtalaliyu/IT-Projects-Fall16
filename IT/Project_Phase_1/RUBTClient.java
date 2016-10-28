@@ -141,12 +141,7 @@ public class RUBTClient {
 				System.out.println("Handshake with " + tmp.name + " accepted\n");
 
 				//send a message
-				long startTime = System.nanoTime();
-				byte[] keepAlive = {0, 0, 0, 0};
-				out.write(keepAlive); 
-				 
-				long estimatedTime = System.nanoTime() - startTime;
-				System.out.println("Time elapsed: " + estimatedTime + " nanoseconds (" + ((float)estimatedTime/1000000000) + " seconds)\n");
+				byte[] keepAlive = {0, 0, 0, 0}; 
 
 				byte [] interestedMessage = new byte[5];
 				System.arraycopy(intToByteArray(1), 0, interestedMessage, 0, 4);
@@ -155,19 +150,30 @@ public class RUBTClient {
 				out.write(interestedMessage);
 				int messageID = getMessageIDFromPeer(in);
 				
-				byte[] messageBytes = new byte[10]; int u = 0;
-				/*while (in.readByte()) {
-					messageBytes[u] = in.readLine();
-					System.out.println(messageBytes[u]);
-					u++;
-				}*/
-				
+				long startTime = 0, estimatedTime;
 				if (messageID == (int) MESSAGE_TYPE_BITFIELD) {
 					System.out.println("Got a bitfield, message ID is: " + messageID);
 
-					//get bitfields
+					//record time
+					startTime = System.nanoTime();
 
+					//get bitfields
+					int bitfieldLength = decodedTorrentByteFile.piece_hashes.length;
+
+					byte[] messageBytes = new byte[bitfieldLength];
+
+					for (int u = 0; u < 9; u++) {
+						messageBytes[u] = in.readByte();
+						System.out.println(messageBytes[u]);
+					}
+				 
+					estimatedTime = System.nanoTime() - startTime;
+					System.out.println("Time elapsed: " + estimatedTime + " nanoseconds (" + ((float)estimatedTime/1000000000) + " seconds)\n");
 				}
+
+				out.write(keepAlive);	//not really doing its job
+				estimatedTime = System.nanoTime() - startTime;
+				System.out.println("Time elapsed: " + estimatedTime + " nanoseconds (" + ((float)estimatedTime/1000000000) + " seconds)\n");
 
 				out.write(interestedMessage);
 				messageID = getMessageIDFromPeer(in);
