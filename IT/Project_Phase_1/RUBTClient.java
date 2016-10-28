@@ -81,52 +81,50 @@ public class RUBTClient{
  		
  		//get peer info from each peer
  		Peer tmp = null; 
- 		for (int i = 0; i < peers.size(); i++) {
- 			tmp = peers.get(i);
+		tmp = peers.get(0);
 
- 			//open socket connection to each peer
-			try (Socket socket = new Socket(tmp.ip, tmp.port))
-			 {
-			 	while (true) {
-	                // open up IO streams
-	                DataInputStream in = new DataInputStream(socket.getInputStream());
-	                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+		//open socket connection to each peer
+		try (Socket socket = new Socket(tmp.ip, tmp.port)) {
 
-					//create handshake message
-			        byte pstrlen = 19;
-			        String pstr = "BitTorrent protocol";
-			        byte[] reserved = {0, 0, 0, 0, 0, 0, 0, 0};
+            // open up IO streams
+            DataInputStream in = new DataInputStream(socket.getInputStream());
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-			        //send handshake
-					out.writeByte(pstrlen);
-					out.writeBytes(pstr);
-					out.write(reserved);
-					out.write(infoHash.array());
-					out.write(peerId);
+			//create handshake message
+	        byte pstrlen = 19;
+	        String pstr = "BitTorrent protocol";
+	        byte[] reserved = {0, 0, 0, 0, 0, 0, 0, 0};
 
-					//get peer handshake response
-					byte[] b = new byte[100];
-					in.readFully(b);
-					System.out.println(b);
+	        //send handshake
+			out.writeByte(pstrlen);
+			out.writeBytes(pstr);
+			out.write(reserved);
+			out.write(infoHash.array());
+			out.write(peerId);
+			out.flush();
 
-					//print handshake response
-					String strg = new String(b);
-					System.out.println(strg);
+			//get peer handshake response
+			byte[] handshakeResponse = new byte[68];
+			in.readFully(handshakeResponse);
+			System.out.println(handshakeResponse);
+			System.out.println(pstr.length()+reserved.length+infoHash.array().length+peerId.length);	
 
-					String cs = "";
-					while ((cs = in.readLine()) != null) {
-						System.out.println(cs);
-					}
-				}
-                
-			} catch (IOException e) {
+			//verify peerID
+			byte[] peerInfoHash = Arrays.copyOfRange(handshakeResponse, 28, 48);
+			if (!Arrays.equals(peerInfoHash, infoHash.array())) {
+				System.out.println("Handshake with " + tmp.name + " denied");
+				socket.close();
+			} else {
 
-			//return error when something goes wrong when server is listening on specified port
-            System.out.println("Client disconnected on port " + tmp.port);
-            System.out.println(e.getMessage());
+				System.out.println("Handshake with " + tmp.name + " accepted");
 			}
- 		}
 
+		} catch (IOException e) {
+
+		//return error when something goes wrong when server is listening on specified port
+        System.out.println("Client disconnected on port " + tmp.port);
+        System.out.println(e.getMessage());
+		}
 	}
 
 	//implement byteBuffer to hex string
