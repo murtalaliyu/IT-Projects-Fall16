@@ -14,6 +14,7 @@ import java.util.*;
 import java.nio.ByteBuffer;
 import java.lang.*;
 import java.net.InetAddress;
+import java.util.UUID;
 
 public class RUBTClient {
 
@@ -128,8 +129,6 @@ public class RUBTClient {
 			//get peer handshake response
 			byte[] handshakeResponse = new byte[68];
 			in.readFully(handshakeResponse);
-			System.out.println(handshakeResponse);
-			System.out.println(pstr.length()+reserved.length+infoHash.array().length+peerId.length);	
 
 			//verify peerID
 			byte[] peerInfoHash = Arrays.copyOfRange(handshakeResponse, 28, 48);
@@ -155,35 +154,35 @@ public class RUBTClient {
 					System.out.println("Got a bitfield, message ID is: " + messageID);
 
 					//record time
-					startTime = System.nanoTime();
+					/*(startTime = System.nanoTime();
 
 					//get bitfields
 					int bitfieldLength = decodedTorrentByteFile.piece_hashes.length;
 
 					byte[] messageBytes = new byte[bitfieldLength];
+					System.out.println(bitfieldLength);
 
-					for (int u = 0; u < 9; u++) {
+					for (int u = 0; u < bitfieldLength; u++) {
 						messageBytes[u] = in.readByte();
 						System.out.println(messageBytes[u]);
 					}
 				 
 					estimatedTime = System.nanoTime() - startTime;
-					System.out.println("Time elapsed: " + estimatedTime + " nanoseconds (" + ((float)estimatedTime/1000000000) + " seconds)\n");
+					System.out.println("Time elapsed: " + estimatedTime + " nanoseconds (" + ((float)estimatedTime/1000000000) + " seconds)\n");*/
 				}
 
-				out.write(keepAlive);	//not really doing its job
-				estimatedTime = System.nanoTime() - startTime;
-				System.out.println("Time elapsed: " + estimatedTime + " nanoseconds (" + ((float)estimatedTime/1000000000) + " seconds)\n");
+				//out.write(keepAlive);	//not really doing its job
+			//	estimatedTime = System.nanoTime() - startTime;
+			//	System.out.println("Time elapsed: " + estimatedTime + " nanoseconds (" + ((float)estimatedTime/1000000000) + " seconds)\n");
 
 				out.write(interestedMessage);
 				messageID = getMessageIDFromPeer(in);
 				
 				if (messageID == 1) {
 					System.out.println("We are unchoked, message ID is: " + messageID);
-
+					System.out.println(in.read());
 					//request piece
 				}
-
 			}
 
 		} catch (IOException e) {
@@ -270,11 +269,15 @@ public class RUBTClient {
 	//generate random bytes
 	public static byte[] getRandomByteArray(int size){
 
-		byte[] result = new byte[size];
-		Random random = new Random();
-		random.nextBytes(result);
+		String uuid = UUID.randomUUID().toString();
+		String newUuid = uuid.substring(0, 8);
+		newUuid += uuid.substring(9, 13);
+		newUuid += uuid.substring(14, 18);
+		newUuid += uuid.substring(19, 23);
 
-		return result;
+		byte[] byteArray = newUuid.getBytes();
+
+		return byteArray;
 	}
 
 	//int to byte array
@@ -326,7 +329,6 @@ public class RUBTClient {
 			
 			messageID = readMessage(in);
 		}
-
 	}
 
 	//read peer message
