@@ -139,40 +139,56 @@ public class RUBTClient {
 				socket.close();
 			} else {
 
-				System.out.println("Handshake with " + tmp.name + " accepted\n");
+				System.out.println("\nHandshake with " + tmp.name + " accepted at port " + tmp.port);
 
-				//send a message
-				//byte[] keepAlive = {0, 0, 0, 0}; 
+				//get bitfields
+				int bitfieldLength = in.readInt();
+				System.out.println(bitfieldLength);
+				Byte messageID = in.readByte();
+				System.out.println(messageID);
+				byte[] bitfield = new byte[64];
+				in.readFully(bitfield);
+				System.out.println(bitfield);
 
-				byte [] interestedMessage = new byte[5];
+
+
+				/*byte[] interestedMessage = new byte[5];
 				System.arraycopy(intToByteArray(1), 0, interestedMessage, 0, 4);
 				interestedMessage[4] = (byte) 2;
 
+				//send interested message
 				out.write(interestedMessage);
 				int messageID = getMessageIDFromPeer(in);
+
+				//get bitfield length
+				int bitfieldLength = length;
+				System.out.println("bitfield length: " + length);
 				
+				//verify messageID
 				long startTime = 0, estimatedTime;
 				if (messageID == (int) MESSAGE_TYPE_BITFIELD) {
-					System.out.println("Got a bitfield, message ID is: " + messageID);
+					System.out.println("Got a bitfield, message ID is " + messageID);
 
 					//record time
 					startTime = System.nanoTime();
 
-					//get bitfields
-					int bitfieldLength = length;
-					System.out.println("bitfield length: " + length);
-
-					byte[] messageBytes = new byte[bitfieldLength];
-
-					for (int u = 0; u < length; u++) {
-						messageBytes[u] = in.readByte();
-						System.out.println(messageBytes[u]);
-					}
+					//read bitfields
+					byte[] bitfield = new byte[length - 1];
+					in.readFully(bitfield);
+					System.out.println(bitfield);
 				 
-					estimatedTime = System.nanoTime() - startTime;
-					System.out.println("Time elapsed: " + estimatedTime + " nanoseconds (" + ((float)estimatedTime/1000000000) + " seconds)\n");
+					//estimatedTime = System.nanoTime() - startTime;
+					//System.out.println("Time elapsed: " + estimatedTime + " nanoseconds (" + ((float)estimatedTime/1000000000) + " seconds)\n");
 
 				}
+
+				//unchoke message
+				byte[] messageBytes = new byte[bitfieldLength];
+				for (int u = 0; u < interestedMessage.length; u++) {
+					messageBytes[u] = in.readByte();
+					System.out.print(messageBytes[u] + " ");
+				}
+				System.out.println();*/
 
 				//out.write(keepAlive);	//not really doing its job
 				//estimatedTime = System.nanoTime() - startTime;
@@ -181,11 +197,11 @@ public class RUBTClient {
 				//out.write(interestedMessage);
 				//messageID = getMessageIDFromPeer(in);
 				
-				if (messageID == 1) {
+				/*if (messageID == 1) {
 					System.out.println("We are unchoked, message ID is: " + messageID);
 					System.out.println(in.read());
 					//request piece
-				}
+				}*/
 			}
 
 		} catch (IOException e) {
