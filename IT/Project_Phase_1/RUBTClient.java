@@ -137,20 +137,38 @@ public class RUBTClient {
 			if (!Arrays.equals(peerInfoHash, infoHash.array())) {
 				System.out.println("Handshake with " + tmp.name + " denied");
 				socket.close();
+
 			} else {
 
 				System.out.println("\nHandshake with " + tmp.name + " accepted at port " + tmp.port);
 
-				//get bitfields
+				//get bitfield length
 				int bitfieldLength = in.readInt();
-				System.out.println(bitfieldLength);
+				System.out.println("bitfield length is: " + bitfieldLength);
+
+				//get message ID
 				Byte messageID = in.readByte();
-				System.out.println(messageID);
-				byte[] bitfield = new byte[64];
-				in.readFully(bitfield);
-				System.out.println(bitfield);
+				System.out.println("message id is: " + messageID);
 
+				//verify messageID
+				if (messageID == (int) MESSAGE_TYPE_BITFIELD) {
+					System.out.println("Got a bitfield, message ID is " + messageID);
 
+					//get bitfields
+					byte[] bitfield = new byte[bitfieldLength-1];
+					in.readFully(bitfield);
+					System.out.println(bitfield);
+
+					//convert bitfield to human readable form
+					String bitFields = "";
+					for (int z = 0; z < bitfield.length; z++) {
+						String s = "0b" + ("0000000" + Integer.toBinaryString(0xFF & bitfield[z])).replaceAll(".*(.{8})$", "$1");
+						bitFields += s;
+						System.out.println(s);
+					}
+				}
+
+				
 
 				/*byte[] interestedMessage = new byte[5];
 				System.arraycopy(intToByteArray(1), 0, interestedMessage, 0, 4);
@@ -159,28 +177,6 @@ public class RUBTClient {
 				//send interested message
 				out.write(interestedMessage);
 				int messageID = getMessageIDFromPeer(in);
-
-				//get bitfield length
-				int bitfieldLength = length;
-				System.out.println("bitfield length: " + length);
-				
-				//verify messageID
-				long startTime = 0, estimatedTime;
-				if (messageID == (int) MESSAGE_TYPE_BITFIELD) {
-					System.out.println("Got a bitfield, message ID is " + messageID);
-
-					//record time
-					startTime = System.nanoTime();
-
-					//read bitfields
-					byte[] bitfield = new byte[length - 1];
-					in.readFully(bitfield);
-					System.out.println(bitfield);
-				 
-					//estimatedTime = System.nanoTime() - startTime;
-					//System.out.println("Time elapsed: " + estimatedTime + " nanoseconds (" + ((float)estimatedTime/1000000000) + " seconds)\n");
-
-				}
 
 				//unchoke message
 				byte[] messageBytes = new byte[bitfieldLength];
@@ -191,8 +187,6 @@ public class RUBTClient {
 				System.out.println();*/
 
 				//out.write(keepAlive);	//not really doing its job
-				//estimatedTime = System.nanoTime() - startTime;
-				//System.out.println("Time elapsed: " + estimatedTime + " nanoseconds (" + ((float)estimatedTime/1000000000) + " seconds)\n");
 
 				//out.write(interestedMessage);
 				//messageID = getMessageIDFromPeer(in);
