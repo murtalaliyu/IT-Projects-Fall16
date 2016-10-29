@@ -151,32 +151,36 @@ public class RUBTClient {
 				System.out.println("message id is: " + messageID);
 
 				//verify messageID
+				String[] bitFields = new String[bitfieldLength]; byte[] bitfield = new byte[bitfieldLength-1];;
 				if (messageID == (int) MESSAGE_TYPE_BITFIELD) {
 					System.out.println("Got a bitfield, message ID is " + messageID);
 
 					//get bitfields
-					byte[] bitfield = new byte[bitfieldLength-1];
 					in.readFully(bitfield);
 					System.out.println(bitfield);
 
 					//convert bitfield to human readable form
-					String bitFields = "";
 					for (int z = 0; z < bitfield.length; z++) {
 						String s = "0b" + ("0000000" + Integer.toBinaryString(0xFF & bitfield[z])).replaceAll(".*(.{8})$", "$1");
-						bitFields += s;
+						//int foo = Integer.parseInt(s, 2);
+						bitFields[z] = s;
 						System.out.println(s);
 					}
+					/*String[] bitFieldsReadable = new String[bitfieldLength];
+					for (int i = 0; i < bitFieldsReadable.length; i++) {
+						bitFieldsReadable[i] = binaryToString(bitFields[i]);
+						System.out.println(bitFieldsReadable[i]);
+					}*/
 				}
 
-				
-
-				/*byte[] interestedMessage = new byte[5];
+				//send interested message
+				byte[] interestedMessage = new byte[5];
 				System.arraycopy(intToByteArray(1), 0, interestedMessage, 0, 4);
 				interestedMessage[4] = (byte) 2;
 
 				//send interested message
-				out.write(interestedMessage);
-				int messageID = getMessageIDFromPeer(in);
+				/*out.write(interestedMessage);
+				int id = getMessageIDFromPeer(in);
 
 				//unchoke message
 				byte[] messageBytes = new byte[bitfieldLength];
@@ -184,15 +188,15 @@ public class RUBTClient {
 					messageBytes[u] = in.readByte();
 					System.out.print(messageBytes[u] + " ");
 				}
-				System.out.println();*/
+				System.out.println();
 
 				//out.write(keepAlive);	//not really doing its job
 
 				//out.write(interestedMessage);
-				//messageID = getMessageIDFromPeer(in);
+				//id = getMessageIDFromPeer(in);
 				
-				/*if (messageID == 1) {
-					System.out.println("We are unchoked, message ID is: " + messageID);
+				/*if (id == 1) {
+					System.out.println("We are unchoked, message ID is: " + id);
 					System.out.println(in.read());
 					//request piece
 				}*/
@@ -215,6 +219,18 @@ public class RUBTClient {
 		}
 		return hash_hex;
 	}
+
+	//implement binary string to ascii string
+	/*public static String binaryToString(String input) {
+		StringBuilder sb = new StringBuilder(); // Some place to store the chars
+		String output = "";
+
+		Arrays.stream(input.split("(?<=\\G.{8})")).forEach(s -> System.out.print((char) Integer.parseInt(s, 2)));
+
+		output += sb.toString(); // Output text 
+
+		return output;
+	}*/
 
 	//implement byteBufferToString 
 	public static String byteBufferToString(ByteBuffer myByteBuffer) {
