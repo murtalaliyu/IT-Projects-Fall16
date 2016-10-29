@@ -38,6 +38,8 @@ public class RUBTClient {
 	public static int downloaded = 0;
 	public static int uploaded = 0;
 
+	public static int length = 0;
+
 	public static void main(String[] args) throws Exception {
 
 		//return error message if torrent file and file name arguments aren't entered
@@ -140,7 +142,7 @@ public class RUBTClient {
 				System.out.println("Handshake with " + tmp.name + " accepted\n");
 
 				//send a message
-				byte[] keepAlive = {0, 0, 0, 0}; 
+				//byte[] keepAlive = {0, 0, 0, 0}; 
 
 				byte [] interestedMessage = new byte[5];
 				System.arraycopy(intToByteArray(1), 0, interestedMessage, 0, 4);
@@ -154,29 +156,30 @@ public class RUBTClient {
 					System.out.println("Got a bitfield, message ID is: " + messageID);
 
 					//record time
-					/*(startTime = System.nanoTime();
+					startTime = System.nanoTime();
 
 					//get bitfields
-					int bitfieldLength = decodedTorrentByteFile.piece_hashes.length;
+					int bitfieldLength = length;
+					System.out.println("bitfield length: " + length);
 
 					byte[] messageBytes = new byte[bitfieldLength];
-					System.out.println(bitfieldLength);
 
-					for (int u = 0; u < bitfieldLength; u++) {
+					for (int u = 0; u < length; u++) {
 						messageBytes[u] = in.readByte();
 						System.out.println(messageBytes[u]);
 					}
 				 
 					estimatedTime = System.nanoTime() - startTime;
-					System.out.println("Time elapsed: " + estimatedTime + " nanoseconds (" + ((float)estimatedTime/1000000000) + " seconds)\n");*/
+					System.out.println("Time elapsed: " + estimatedTime + " nanoseconds (" + ((float)estimatedTime/1000000000) + " seconds)\n");
+
 				}
 
 				//out.write(keepAlive);	//not really doing its job
-			//	estimatedTime = System.nanoTime() - startTime;
-			//	System.out.println("Time elapsed: " + estimatedTime + " nanoseconds (" + ((float)estimatedTime/1000000000) + " seconds)\n");
+				//estimatedTime = System.nanoTime() - startTime;
+				//System.out.println("Time elapsed: " + estimatedTime + " nanoseconds (" + ((float)estimatedTime/1000000000) + " seconds)\n");
 
-				out.write(interestedMessage);
-				messageID = getMessageIDFromPeer(in);
+				//out.write(interestedMessage);
+				//messageID = getMessageIDFromPeer(in);
 				
 				if (messageID == 1) {
 					System.out.println("We are unchoked, message ID is: " + messageID);
@@ -333,7 +336,7 @@ public class RUBTClient {
 
 	//read peer message
 	public static byte readMessage(DataInputStream in) throws Exception {
-		int length = in.readInt();
+		length = in.readInt();
 
 		if (length == 0) {
 			return -1;
