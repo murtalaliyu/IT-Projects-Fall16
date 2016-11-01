@@ -192,7 +192,7 @@ public class RUBTClient {
 					int pieceLength = decodedTorrentByteFile.piece_length;
 					System.out.println("piece count: " + pieceCount + ". Piece length: " + pieceLength);
 
-					for (int i = 0; i < pieceCount*2; i++) {
+					for (int i = 0; i < pieceCount; i++) {
 						
 						if (i == pieceCount - 1) {
 							pieceLength = decodedTorrentByteFile.file_length % pieceLength;
@@ -225,11 +225,11 @@ public class RUBTClient {
 							//read fully
 							byte[] block = new byte[pieceLength/2];
 							in.readFully(block, 0, pieceLength/2);
-							System.out.println(block);
+							System.out.println("block: " + block + ". blockSize: " + block.length);
 
 							//save downloaded piece
-							byte[] currentPiece = Arrays.copyOfRange(block, i * (decodedTorrentByteFile.piece_length/2), i * (decodedTorrentByteFile.piece_length/2) + pieceLength/2);
-							System.out.println(currentPiece);
+							byte[] currentPiece = Arrays.copyOfRange(block, 0, i * (decodedTorrentByteFile.piece_length/2) + pieceLength/2);
+							System.out.println("currentPiece: " + currentPiece + ". currentPieceLength: " + currentPiece.length);
 
 						} else {
 							System.err.println("Error! Piece #" + i + " has not been received");
