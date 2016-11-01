@@ -184,6 +184,7 @@ public class RUBTClient {
 				//out.write(keepAlive);	//not really doing its job
 				
 				//check if we're unchoked
+				byte[] currentPiece = null;
 				if (id == 1) {
 					System.out.println("We are unchoked, message ID is " + id);
 
@@ -228,8 +229,12 @@ public class RUBTClient {
 							System.out.println("block: " + block + ". blockSize: " + block.length);
 
 							//save downloaded piece
-							byte[] currentPiece = Arrays.copyOfRange(block, 0, i * (decodedTorrentByteFile.piece_length/2) + pieceLength/2);
+							currentPiece = Arrays.copyOfRange(block, 0, i * (decodedTorrentByteFile.piece_length/2) + pieceLength/2);
 							System.out.println("currentPiece: " + currentPiece + ". currentPieceLength: " + currentPiece.length);
+
+							//verify block
+							//ByteBuffer[] pieceHash = decodedTorrentByteFile.piece_hashes;
+
 
 						} else {
 							System.err.println("Error! Piece #" + i + " has not been received");
@@ -237,6 +242,14 @@ public class RUBTClient {
 
 					}
 				}
+
+				//write to file
+				String fileName = decodedTorrentByteFile.file_name;
+				System.out.println(fileName);
+				FileOutputStream fos = new FileOutputStream("/Users/Murtala/Desktop/IT-Projects-Fall16/IT/Project_Phase_1/GivenTools/" + fileName);
+				fos.write(currentPiece);
+				fos.close();
+
 			}
 
 		} catch (IOException e) {
