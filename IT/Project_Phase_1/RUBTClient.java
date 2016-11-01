@@ -192,7 +192,7 @@ public class RUBTClient {
 					int pieceLength = decodedTorrentByteFile.piece_length;
 					System.out.println("piece count: " + pieceCount + ". Piece length: " + pieceLength);
 
-					for (int i = 0; i < pieceCount; i++) {
+					for (int i = 0; i < pieceCount*2; i++) {
 						
 						if (i == pieceCount - 1) {
 							pieceLength = decodedTorrentByteFile.file_length % pieceLength;
@@ -215,9 +215,9 @@ public class RUBTClient {
 							int index = in.readInt();
                         	int begin = in.readInt();
 
-	                        if (i == pieceCount - 1) { // Last piece
+	                        /*if (i == pieceCount - 1) { // Last piece
 	                            pieceLength = in.available();
-	                        } /*else { // Wait until there is enough available bytes
+	                        } else { // Wait until there is enough available bytes
 	                            while (in.available() < pieceLength) { }
 	                        }*/
 							System.out.println("index: " + index + ". begin: " + begin + ". available: " + in.available());
