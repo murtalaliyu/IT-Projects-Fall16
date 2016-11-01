@@ -183,6 +183,7 @@ public class RUBTClient {
 
 				//out.write(keepAlive);	//not really doing its job
 				
+				//check if we're unchoked
 				if (id == 1) {
 					System.out.println("We are unchoked, message ID is " + id);
 
@@ -227,8 +228,8 @@ public class RUBTClient {
 							System.out.println(block);
 
 							//save downloaded piece
-							/*byte[] currentPiece = Arrays.copyOfRange(block, i * (decodedTorrentByteFile.piece_length/2), i * (decodedTorrentByteFile.piece_length/2) + pieceLength/2);
-							System.out.println(currentPiece);*/
+							byte[] currentPiece = Arrays.copyOfRange(block, i * (decodedTorrentByteFile.piece_length/2), i * (decodedTorrentByteFile.piece_length/2) + pieceLength/2);
+							System.out.println(currentPiece);
 
 						} else {
 							System.err.println("Error! Piece #" + i + " has not been received");
