@@ -223,8 +223,8 @@ public class RUBTClient {
 							System.out.println("index: " + index + ". begin: " + begin + ". available: " + in.available());
 
 							//read fully
-							byte[] block = new byte[pieceLength];
-							in.readFully(block, i * (decodedTorrentByteFile.piece_length), pieceLength);
+							byte[] block = new byte[pieceLength/2];
+							in.readFully(block, 0, pieceLength/2);
 							System.out.println(block);
 
 							//save downloaded piece
