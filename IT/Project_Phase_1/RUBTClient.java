@@ -1,7 +1,7 @@
 /*
 Authors
 Murtala Aliyu
-Anrew Marshall
+Andrew Marshall
 */
 
 import java.net.Socket;
@@ -143,15 +143,15 @@ public class RUBTClient {
 				System.out.println("\nHandshake with " + tmp.name + " accepted at port " + tmp.port);
 
 				//get bitfield length
-				int bitfieldLength = in.readInt();
-				System.out.println("bitfield length is: " + bitfieldLength);
+				int length = in.readInt();
+				System.out.println("bitfield length is: " + length);
 
 				//get message ID
 				Byte messageID = in.readByte();
 				System.out.println("message id is: " + messageID);
 
 				//verify messageID
-				String[] bitFields = new String[bitfieldLength]; byte[] bitfield = new byte[bitfieldLength-1];;
+				String[] bitFields = new String[length]; byte[] bitfield = new byte[length-1];;
 				if (messageID == (int) MESSAGE_TYPE_BITFIELD) {
 					System.out.println("Got a bitfield, message ID is " + messageID);
 
@@ -166,7 +166,7 @@ public class RUBTClient {
 						bitFields[z] = s;
 						System.out.println(s);
 					}
-					/*String[] bitFieldsReadable = new String[bitfieldLength];
+					/*String[] bitFieldsReadable = new String[length];
 					for (int i = 0; i < bitFieldsReadable.length; i++) {
 						bitFieldsReadable[i] = binaryToString(bitFields[i]);
 						System.out.println(bitFieldsReadable[i]);
@@ -178,28 +178,64 @@ public class RUBTClient {
 				System.arraycopy(intToByteArray(1), 0, interestedMessage, 0, 4);
 				interestedMessage[4] = (byte) 2;
 
-				//send interested message
-				/*out.write(interestedMessage);
+				out.write(interestedMessage);
 				int id = getMessageIDFromPeer(in);
 
-				//unchoke message
-				byte[] messageBytes = new byte[bitfieldLength];
-				for (int u = 0; u < interestedMessage.length; u++) {
-					messageBytes[u] = in.readByte();
-					System.out.print(messageBytes[u] + " ");
-				}
-				System.out.println();
-
 				//out.write(keepAlive);	//not really doing its job
-
-				//out.write(interestedMessage);
-				//id = getMessageIDFromPeer(in);
 				
-				/*if (id == 1) {
-					System.out.println("We are unchoked, message ID is: " + id);
-					System.out.println(in.read());
-					//request piece
-				}*/
+				if (id == 1) {
+					System.out.println("We are unchoked, message ID is " + id);
+
+					//get piece count and length
+					int pieceCount = decodedTorrentByteFile.file_length / decodedTorrentByteFile.piece_length;
+					int pieceLength = decodedTorrentByteFile.piece_length;
+					System.out.println("piece count: " + pieceCount + ". Piece length: " + pieceLength);
+
+					for (int i = 0; i < pieceCount*2; i++) {
+						
+						if (i == pieceCount - 1) {
+							pieceLength = decodedTorrentByteFile.file_length % pieceLength;
+						}
+
+						//send request
+						out.writeInt(13); // Message Length
+						out.writeByte(MESSAGE_TYPE_REQUEST); // Message ID
+						out.writeInt(0); // Index
+						out.writeInt(i); // Begin
+						out.writeInt(pieceLength/2); // Length
+
+						//read request response
+						length = in.readInt();
+                    	messageID = in.readByte();
+						System.out.println("message id: " + messageID + ". count = " + i);
+
+						//verify that this is a piece
+						if (messageID == 7) {
+							int index = in.readInt();
+                        	int begin = in.readInt();
+
+	                        if (i == pieceCount - 1) { // Last piece
+	                            pieceLength = in.available();
+	                        } /*else { // Wait until there is enough available bytes
+	                            while (in.available() < pieceLength) { }
+	                        }*/
+							System.out.println("index: " + index + ". begin: " + begin + ". available: " + in.available());
+
+							//read fully
+							byte[] block = new byte[pieceLength];
+							in.readFully(block, i * (decodedTorrentByteFile.piece_length), pieceLength);
+							System.out.println(block);
+
+							//save downloaded piece
+							/*byte[] currentPiece = Arrays.copyOfRange(block, i * (decodedTorrentByteFile.piece_length/2), i * (decodedTorrentByteFile.piece_length/2) + pieceLength/2);
+							System.out.println(currentPiece);*/
+
+						} else {
+							System.err.println("Error! Piece #" + i + " has not been received");
+						}
+
+					}
+				}
 			}
 
 		} catch (IOException e) {
