@@ -193,51 +193,56 @@ public class RUBTClient {
 					int pieceLength = decodedTorrentByteFile.piece_length;
 					System.out.println("piece count: " + pieceCount + ". Piece length: " + pieceLength);
 
-					for (int i = 0; i < pieceCount*2; i++) {
+					for (int i = 0; i < pieceCount; i++) {
 						
 						if (i == pieceCount - 1) {
 							pieceLength = decodedTorrentByteFile.file_length % pieceLength;
 						}
 
-						//send request
-						out.writeInt(13); // Message Length
-						out.writeByte(MESSAGE_TYPE_REQUEST); // Message ID
-						out.writeInt(0); // Index
-						out.writeInt(i); // Begin
-						out.writeInt(pieceLength/2); // Length
+						for (int j = 0; j < 2; j++) {
 
-						//read request response
-						length = in.readInt();
-                    	messageID = in.readByte();
-						System.out.println("message id: " + messageID + ". count = " + i);
+							System.out.println("i: " + i + ". j: " + j);
 
-						//verify that this is a piece
-						if (messageID == 7) {
-							int index = in.readInt();
-                        	int begin = in.readInt();
+							//send request
+							out.writeInt(13); // Message Length
+							out.writeByte(MESSAGE_TYPE_REQUEST); // Message ID
+							out.writeInt(i); // Index
+							out.writeInt(j*16384); // Begin
+							out.writeInt(pieceLength/2); // Length
 
-	                        /*if (i == pieceCount - 1) { // Last piece
-	                            pieceLength = in.available();
-	                        } else { // Wait until there is enough available bytes
-	                            while (in.available() < pieceLength) { }
-	                        }*/
-							System.out.println("index: " + index + ". begin: " + begin + ". available: " + in.available());
+							//read request response
+							length = in.readInt();
+	                    	messageID = in.readByte();
+							System.out.println("message id: " + messageID + ". count = " + i);
 
-							//read fully
-							byte[] block = new byte[pieceLength/2];
-							in.readFully(block, 0, pieceLength/2);
-							System.out.println("block: " + block + ". blockSize: " + block.length);
+							//verify that this is a piece
+							if (messageID == 7) {
+								int index = in.readInt();
+	                        	int begin = in.readInt();
 
-							//save downloaded piece
-							currentPiece = Arrays.copyOfRange(block, 0, i * (decodedTorrentByteFile.piece_length/2) + pieceLength/2);
-							System.out.println("currentPiece: " + currentPiece + ". currentPieceLength: " + currentPiece.length);
+		                        /*if (i == pieceCount - 1) { // Last piece
+		                            pieceLength = in.available();
+		                        } else { // Wait until there is enough available bytes
+		                            while (in.available() < pieceLength) { }
+		                        }*/
+								System.out.println("index: " + index + ". begin: " + begin + ". available: " + in.available());
 
-							//verify block
-							//ByteBuffer[] pieceHash = decodedTorrentByteFile.piece_hashes;
+								//read fully
+								byte[] block = new byte[pieceLength/2];
+								in.readFully(block, 0, pieceLength/2);
+								System.out.println("block: " + block + ". blockSize: " + block.length);
 
+								//save downloaded piece
+								currentPiece = Arrays.copyOfRange(block, i * (decodedTorrentByteFile.piece_length/2), i * (decodedTorrentByteFile.piece_length/2) + pieceLength/2);
+								System.out.println("currentPiece: " + currentPiece + ". currentPieceLength: " + currentPiece.length);
 
-						} else {
-							System.err.println("Error! Piece #" + i + " has not been received");
+								//verify block
+								//ByteBuffer[] pieceHash = decodedTorrentByteFile.piece_hashes;
+
+							} else {
+								System.err.println("Error! Piece #" + i + " has not been received");
+							}
+
 						}
 
 					}
@@ -255,8 +260,8 @@ public class RUBTClient {
 		} catch (IOException e) {
 
 		//return error when something goes wrong when server is listening on specified port
-        System.out.println("Client disconnected on port " + tmp.port);
-        System.out.println(e.getMessage());
+        System.out.println("Client disconnected at port " + tmp.port);
+        System.err.println(e.getMessage());
 		}
 	}
 
