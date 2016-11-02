@@ -184,7 +184,7 @@ public class RUBTClient {
 				//out.write(keepAlive);	//not really doing its job
 				
 				//check if we're unchoked
-				byte[] currentPiece = null;
+				byte[] currentPiece = new byte[decodedTorrentByteFile.file_length];
 				if (id == 1) {
 					System.out.println("We are unchoked, message ID is " + id);
 
@@ -207,7 +207,7 @@ public class RUBTClient {
 							out.writeInt(13); // Message Length
 							out.writeByte(MESSAGE_TYPE_REQUEST); // Message ID
 							out.writeInt(i); // Index
-							out.writeInt(j*16384); // Begin
+							out.writeInt(j*(decodedTorrentByteFile.piece_length/2)); // Begin
 							out.writeInt(pieceLength/2); // Length
 
 							//read request response
@@ -233,8 +233,9 @@ public class RUBTClient {
 								System.out.println("block: " + block + ". blockSize: " + block.length);
 
 								//save downloaded piece
-								currentPiece = Arrays.copyOfRange(block, i * (decodedTorrentByteFile.piece_length/2), i * (decodedTorrentByteFile.piece_length/2) + pieceLength/2);
-								System.out.println("currentPiece: " + currentPiece + ". currentPieceLength: " + currentPiece.length);
+								//currentPiece = Arrays.copyOfRange(block, 0, decodedTorrentByteFile.piece_length/2);
+								System.arraycopy(block, 0, currentPiece, i*(decodedTorrentByteFile.piece_length/2), block.length);
+								System.out.println("currentPiece: " + currentPiece + ". totalDownloadedPieceSize: " + currentPiece.length);
 
 								//verify block
 								//ByteBuffer[] pieceHash = decodedTorrentByteFile.piece_hashes;
